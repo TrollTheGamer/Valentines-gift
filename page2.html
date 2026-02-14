@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>For You 💝</title>
+
+<style>
+body {
+  margin: 0;
+  background: linear-gradient(180deg, #fff0f5, #ffd6ec);
+  font-family: 'Georgia', serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  overflow: hidden;
+  text-align: center;
+}
+
+.back-btn {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+
+  background: rgba(255,255,255,0.6);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.8);
+
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-family: 'Georgia', serif;
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  transition: all 0.3s ease;
+}
+
+.back-btn:hover {
+  background: rgba(255,255,255,0.9);
+  transform: translateY(-2px);
+}
+
+h1 {
+  color: #c94f7c;
+  margin-bottom: 20px;
+  font-size: 1.4rem;
+}
+
+/* Vinyl player container */
+.player {
+  position: relative;
+  width: 280px;
+  height: 280px;
+}
+
+/* Disc */
+.disc {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: black;
+  position: relative;
+  animation: spin 4s linear infinite;
+  animation-play-state: paused;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.disc img {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Vinyl grooves */
+.disc::after {
+  content: "";
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  top: 20px;
+  left: 20px;
+  box-shadow:
+    inset 0 0 0 2px #222,
+    inset 0 0 0 8px #111,
+    inset 0 0 0 14px #222;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Tonearm */
+.arm {
+  position: absolute;
+  width: 130px;
+  height: 6px;
+  background: #444;
+  top: 25px;
+  right: -20px;
+  transform-origin: 10px center;
+  transform: rotate(-35deg);
+  transition: transform 0.5s ease;
+  border-radius: 4px;
+  z-index: 10;
+}
+
+
+.arm::after {
+  content: "";
+  position: absolute;
+  right: -10px;
+  top: -6px;
+  width: 16px;
+  height: 16px;
+  background: silver;
+  border-radius: 50%;
+}
+
+/* Controls */
+.controls {
+  margin-top: 25px;
+  width: 280px;
+}
+
+button {
+  background: #ffb6d9;
+  border: none;
+  padding: 8px 20px;
+  border-radius: 20px;
+  cursor: pointer;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+button:hover {
+  background: #ff9fce;
+}
+
+/* Progress Bar */
+.progress-container {
+  width: 100%;
+  height: 6px;
+  background: #ffcce6;
+  border-radius: 10px;
+  cursor: pointer;
+  position: relative;
+  margin-bottom: 15px;
+}
+
+.progress {
+  height: 100%;
+  width: 0%;
+  background: #ff69b4;
+  border-radius: 10px;
+}
+
+/* Volume */
+.volume {
+  width: 100%;
+}
+
+input[type="range"] {
+  width: 100%;
+  accent-color: #ff69b4;
+}
+</style>
+</head>
+
+<body>
+
+<button class="back-btn" onclick="goBack()">← Back</button>
+
+<h1>this song reminds me of you 💝</h1>
+
+<div class="player">
+  <div class="disc" id="disc">
+    <img src="image.jpg">
+  </div>
+  <div class="arm" id="arm"></div>
+</div>
+
+<div class="controls">
+  <button onclick="toggleMusic()" id="playBtn">Play ▶</button>
+
+  <div class="progress-container" onclick="setProgress(event)">
+    <div class="progress" id="progress"></div>
+  </div>
+
+  <div class="volume">
+    <input type="range" min="0" max="1" step="0.01" id="volumeSlider">
+  </div>
+</div>
+
+<audio id="bgMusic" src="valentine.mp3"></audio>
+
+<script>
+const music = document.getElementById("bgMusic");
+const disc = document.getElementById("disc");
+const arm = document.getElementById("arm");
+const progress = document.getElementById("progress");
+const volumeSlider = document.getElementById("volumeSlider");
+const btn = document.getElementById("playBtn");
+
+/* ---------- SETUP ---------- */
+window.addEventListener("DOMContentLoaded", () => {
+
+  const savedTime = localStorage.getItem("musicTime");
+  const savedVolume = localStorage.getItem("musicVolume");
+
+  if (savedTime) music.currentTime = parseFloat(savedTime);
+
+  if (savedVolume !== null) {
+    music.volume = parseFloat(savedVolume);
+    volumeSlider.value = savedVolume;
+  } else {
+    music.volume = 0.7;
+    volumeSlider.value = 0.7;
+  }
+
+  updateUI(false);
+});
+
+/* ---------- REAL AUDIO EVENTS ---------- */
+music.addEventListener("play", () => {
+  updateUI(true);
+  localStorage.setItem("musicState", "playing");
+});
+
+music.addEventListener("pause", () => {
+  updateUI(false);
+  localStorage.setItem("musicState", "paused");
+});
+
+/* ---------- TOGGLE ---------- */
+btn.addEventListener("click", () => {
+  if (music.paused) {
+    music.play().catch(err => console.log(err));
+  } else {
+    music.pause();
+  }
+});
+
+/* ---------- UI UPDATE ---------- */
+function updateUI(isPlaying) {
+  if (isPlaying) {
+    disc.style.animationPlayState = "running";
+    arm.style.transform = "rotate(18deg)";
+    btn.textContent = "Pause ⏸";
+  } else {
+    disc.style.animationPlayState = "paused";
+    arm.style.transform = "rotate(-35deg)";
+    btn.textContent = "Play ▶";
+  }
+}
+
+/* ---------- PROGRESS ---------- */
+music.addEventListener("timeupdate", () => {
+  if (music.duration) {
+    const percent = (music.currentTime / music.duration) * 100;
+    progress.style.width = percent + "%";
+  }
+  localStorage.setItem("musicTime", music.currentTime);
+});
+
+/* ---------- SEEK ---------- */
+function setProgress(e) {
+  const width = e.currentTarget.clientWidth;
+  const clickX = e.offsetX;
+  const duration = music.duration;
+
+  if (duration) {
+    music.currentTime = (clickX / width) * duration;
+  }
+}
+
+/* ---------- VOLUME ---------- */
+volumeSlider.addEventListener("input", function() {
+  music.volume = this.value;
+  localStorage.setItem("musicVolume", this.value);
+});
+
+
+</script>
+
+
+
+
+
+</body>
+</html>
